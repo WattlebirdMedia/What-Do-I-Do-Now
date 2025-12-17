@@ -5,5 +5,15 @@ export default function TaskInputExample() {
     console.log("Task added:", task);
   };
 
-  return <TaskInput onAddTask={handleAddTask} />;
+  const handleStartTasks = () => {
+    console.log("Starting tasks");
+  };
+
+  return (
+    <TaskInput 
+      onAddTask={handleAddTask} 
+      taskCount={3}
+      onStartTasks={handleStartTasks}
+    />
+  );
 }

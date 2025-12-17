@@ -9,5 +9,18 @@ export default function TaskDisplayExample() {
     console.log("Task skipped");
   };
 
-  return <TaskDisplay task="Reply to the important email" onDone={handleDone} onSkip={handleSkip} />;
+  const handleAddMore = () => {
+    console.log("Add more tasks");
+  };
+
+  return (
+    <TaskDisplay 
+      task="Reply to the important email" 
+      onDone={handleDone} 
+      onSkip={handleSkip}
+      taskPosition={1}
+      totalTasks={5}
+      onAddMore={handleAddMore}
+    />
+  );
 }
