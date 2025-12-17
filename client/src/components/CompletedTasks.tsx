@@ -17,7 +17,21 @@ function formatTime(isoString: string): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+const encouragingPhrases = [
+  "I did it",
+  "I followed through",
+  "I completed this",
+  "I showed up for this"
+];
+
+function getRandomPhrase(): string {
+  const index = Math.floor(Math.random() * encouragingPhrases.length);
+  return encouragingPhrases[index];
+}
+
 export default function CompletedTasks({ tasks, onBack, onClear }: CompletedTasksProps) {
+  const phrase = getRandomPhrase();
+  
   return (
     <div className="flex flex-col min-h-screen bg-background" role="main" aria-label="Completed tasks">
       <header className="flex items-center justify-between p-4 md:p-6 border-b border-border">
@@ -52,7 +66,7 @@ export default function CompletedTasks({ tasks, onBack, onClear }: CompletedTask
                   <Star className="w-8 h-8 text-foreground" />
                 </div>
                 <h2 className="text-2xl md:text-3xl font-normal text-foreground">
-                  I did it
+                  {phrase}
                 </h2>
                 <p className="text-muted-foreground text-lg">
                   You completed {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} today.
