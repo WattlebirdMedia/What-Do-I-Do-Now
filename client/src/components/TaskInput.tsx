@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Circle, Mic, MicOff } from "lucide-react";
+import { Circle, Mic, MicOff, CheckCircle } from "lucide-react";
 
 interface TaskInputProps {
   onAddTask: (task: string) => void;
   taskCount?: number;
   onStartTasks?: () => void;
+  completedCount?: number;
+  onViewCompleted?: () => void;
 }
 
-export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks }: TaskInputProps) {
+export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks, completedCount = 0, onViewCompleted }: TaskInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -139,6 +141,21 @@ export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks }: Ta
               data-testid="button-start-tasks"
             >
               Start Working
+            </Button>
+          </div>
+        )}
+
+        {completedCount > 0 && onViewCompleted && (
+          <div className="pt-4">
+            <Button
+              variant="ghost"
+              size="lg"
+              className="w-full min-h-12 text-base gap-2"
+              onClick={onViewCompleted}
+              data-testid="button-view-completed"
+            >
+              <CheckCircle className="w-4 h-4" />
+              View {completedCount} completed today
             </Button>
           </div>
         )}

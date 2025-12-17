@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Plus, Pause, Play } from "lucide-react";
+import { Check, ArrowRight, Plus, Pause, Play, CheckCircle } from "lucide-react";
 
 interface TaskDisplayProps {
   task: string;
@@ -9,6 +9,8 @@ interface TaskDisplayProps {
   taskPosition?: number;
   totalTasks?: number;
   onAddMore?: () => void;
+  completedCount?: number;
+  onViewCompleted?: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -23,7 +25,9 @@ export default function TaskDisplay({
   onSkip, 
   taskPosition = 1, 
   totalTasks = 1,
-  onAddMore 
+  onAddMore,
+  completedCount = 0,
+  onViewCompleted
 }: TaskDisplayProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [timerPaused, setTimerPaused] = useState(false);
@@ -127,6 +131,18 @@ export default function TaskDisplay({
               </Button>
             )}
           </div>
+          {completedCount > 0 && onViewCompleted && (
+            <Button
+              variant="ghost"
+              size="lg"
+              className="w-full min-h-10 text-sm gap-2"
+              onClick={onViewCompleted}
+              data-testid="button-view-completed"
+            >
+              <CheckCircle className="w-4 h-4" />
+              View {completedCount} completed today
+            </Button>
+          )}
         </div>
       </footer>
     </div>
