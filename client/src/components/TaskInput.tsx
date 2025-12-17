@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Circle } from "lucide-react";
+import { Circle, Mic, MicOff } from "lucide-react";
 
 interface TaskInputProps {
   onAddTask: (task: string) => void;
@@ -11,6 +11,48 @@ interface TaskInputProps {
 
 export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks }: TaskInputProps) {
   const [inputValue, setInputValue] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognitionAPI) {
+      setSpeechSupported(true);
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(prev => prev ? `${prev} ${transcript}` : transcript);
+        setIsRecording(false);
+      };
+      
+      recognition.onerror = () => {
+        setIsRecording(false);
+      };
+      
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+      
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (!recognitionRef.current) return;
+    
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      recognitionRef.current.start();
+      setIsRecording(true);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,16 +85,36 @@ export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks }: Ta
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="What needs to be done?"
-            className="w-full text-base md:text-lg py-6 px-4 bg-card border-card-border"
-            autoFocus
-            data-testid="input-task"
-            aria-label="Enter a new task"
-          />
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="What needs to be done?"
+              className="flex-1 text-base md:text-lg py-6 px-4 bg-card border-card-border"
+              autoFocus
+              data-testid="input-task"
+              aria-label="Enter a new task"
+            />
+            {speechSupported && (
+              <Button
+                type="button"
+                size="icon"
+                variant={isRecording ? "default" : "outline"}
+                onClick={toggleRecording}
+                data-testid="button-record-task"
+                aria-label={isRecording ? "Stop recording" : "Record task with voice"}
+                className="min-h-12 min-w-12"
+              >
+                {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </Button>
+            )}
+          </div>
+          {isRecording && (
+            <p className="text-sm text-muted-foreground text-center" aria-live="polite">
+              Listening... speak your task
+            </p>
+          )}
           <Button
             type="submit"
             size="lg"
