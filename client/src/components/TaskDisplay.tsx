@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Plus, Timer, TimerOff, Pause, Play } from "lucide-react";
+import { Check, ArrowRight, Plus, Pause, Play } from "lucide-react";
 
 interface TaskDisplayProps {
   task: string;
@@ -26,15 +26,7 @@ export default function TaskDisplay({
   onAddMore 
 }: TaskDisplayProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [timerEnabled, setTimerEnabled] = useState(() => {
-    const saved = localStorage.getItem("timerEnabled");
-    return saved !== null ? JSON.parse(saved) : true;
-  });
   const [timerPaused, setTimerPaused] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem("timerEnabled", JSON.stringify(timerEnabled));
-  }, [timerEnabled]);
 
   useEffect(() => {
     setElapsedSeconds(0);
@@ -42,14 +34,14 @@ export default function TaskDisplay({
   }, [task]);
 
   useEffect(() => {
-    if (!timerEnabled || timerPaused) return;
+    if (timerPaused) return;
     
     const interval = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timerEnabled, timerPaused]);
+  }, [timerPaused]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background" role="main" aria-label="Current task view">
@@ -58,36 +50,23 @@ export default function TaskDisplay({
           {taskPosition} of {totalTasks}
         </div>
         <div className="flex items-center gap-1">
-          {timerEnabled && (
-            <>
-              <div 
-                className={`text-xl md:text-2xl font-sans tabular-nums tracking-wide ${timerPaused ? 'text-muted-foreground' : 'text-foreground'}`}
-                data-testid="text-timer"
-                role="timer"
-                aria-live="polite"
-                aria-label={`Time elapsed: ${Math.floor(elapsedSeconds / 60)} minutes and ${elapsedSeconds % 60} seconds${timerPaused ? ', paused' : ''}`}
-              >
-                {formatTime(elapsedSeconds)}
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setTimerPaused(!timerPaused)}
-                data-testid="button-pause-timer"
-                aria-label={timerPaused ? "Resume timer" : "Pause timer"}
-              >
-                {timerPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-              </Button>
-            </>
-          )}
+          <div 
+            className={`text-xl md:text-2xl font-sans tabular-nums tracking-wide ${timerPaused ? 'text-muted-foreground' : 'text-foreground'}`}
+            data-testid="text-timer"
+            role="timer"
+            aria-live="polite"
+            aria-label={`Time elapsed: ${Math.floor(elapsedSeconds / 60)} minutes and ${elapsedSeconds % 60} seconds${timerPaused ? ', paused' : ''}`}
+          >
+            {formatTime(elapsedSeconds)}
+          </div>
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => setTimerEnabled(!timerEnabled)}
-            data-testid="button-toggle-timer"
-            aria-label={timerEnabled ? "Hide timer" : "Show timer"}
+            onClick={() => setTimerPaused(!timerPaused)}
+            data-testid="button-pause-timer"
+            aria-label={timerPaused ? "Resume timer" : "Pause timer"}
           >
-            {timerEnabled ? <Timer className="w-5 h-5" /> : <TimerOff className="w-5 h-5" />}
+            {timerPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </Button>
         </div>
       </header>
