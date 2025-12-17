@@ -27,8 +27,10 @@ export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks, comp
       recognition.lang = 'en-US';
       
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputValue(prev => prev ? `${prev} ${transcript}` : transcript);
+        const transcript = event.results[0][0].transcript.trim();
+        if (transcript) {
+          onAddTask(transcript);
+        }
         setIsRecording(false);
       };
       
@@ -42,7 +44,7 @@ export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks, comp
       
       recognitionRef.current = recognition;
     }
-  }, []);
+  }, [onAddTask]);
 
   const toggleRecording = () => {
     if (!recognitionRef.current) return;
