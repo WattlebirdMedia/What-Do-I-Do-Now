@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Circle, Mic, MicOff, CheckCircle } from "lucide-react";
+import { Circle, Mic, MicOff, CheckCircle, Heart } from "lucide-react";
 
 interface TaskInputProps {
   onAddTask: (task: string) => void;
@@ -186,6 +186,20 @@ export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks, comp
             </Button>
           </div>
         )}
+
+        <div className="pt-8 text-center">
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="link-support"
+            aria-label="Support this app"
+          >
+            <Heart className="w-3.5 h-3.5" />
+            Support this app
+          </a>
+        </div>
       </div>
     </div>
   );
