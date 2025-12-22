@@ -4,15 +4,21 @@ import { storage } from "./storage";
 import { getStripeClient } from "./stripeClient";
 import { insertTaskSchema } from "@shared/schema";
 import { ZodError } from "zod";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Setup authentication first
+  await setupAuth(app);
+  registerAuthRoutes(app);
+
   // Get all pending tasks
-  app.get("/api/tasks", async (req, res) => {
+  app.get("/api/tasks", isAuthenticated, async (req: any, res) => {
     try {
-      const tasks = await storage.getTasks();
+      const userId = req.user.claims.sub;
+      const tasks = await storage.getTasks(userId);
       res.json(tasks);
     } catch (error: any) {
       console.error('Get tasks error:', error);
@@ -21,9 +27,10 @@ export async function registerRoutes(
   });
 
   // Get completed tasks
-  app.get("/api/tasks/completed", async (req, res) => {
+  app.get("/api/tasks/completed", isAuthenticated, async (req: any, res) => {
     try {
-      const tasks = await storage.getCompletedTasks();
+      const userId = req.user.claims.sub;
+      const tasks = await storage.getCompletedTasks(userId);
       res.json(tasks);
     } catch (error: any) {
       console.error('Get completed tasks error:', error);
@@ -32,9 +39,10 @@ export async function registerRoutes(
   });
 
   // Create a new task
-  app.post("/api/tasks", async (req, res) => {
+  app.post("/api/tasks", isAuthenticated, async (req: any, res) => {
     try {
-      const existingTasks = await storage.getTasks();
+      const userId = req.user.claims.sub;
+      const existingTasks = await storage.getTasks(userId);
       const position = existingTasks.length;
       
       const validatedData = insertTaskSchema.parse({
@@ -42,7 +50,7 @@ export async function registerRoutes(
         position: position
       });
       
-      const task = await storage.createTask(validatedData);
+      const task = await storage.createTask(validatedData, userId);
       res.json(task);
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -54,9 +62,10 @@ export async function registerRoutes(
   });
 
   // Complete a task
-  app.patch("/api/tasks/:id/complete", async (req, res) => {
+  app.patch("/api/tasks/:id/complete", isAuthenticated, async (req: any, res) => {
     try {
-      const task = await storage.completeTask(req.params.id);
+      const userId = req.user.claims.sub;
+      const task = await storage.completeTask(req.params.id, userId);
       if (!task) {
         return res.status(404).json({ error: 'Task not found' });
       }
@@ -68,9 +77,10 @@ export async function registerRoutes(
   });
 
   // Delete a task
-  app.delete("/api/tasks/:id", async (req, res) => {
+  app.delete("/api/tasks/:id", isAuthenticated, async (req: any, res) => {
     try {
-      await storage.deleteTask(req.params.id);
+      const userId = req.user.claims.sub;
+      await storage.deleteTask(req.params.id, userId);
       res.json({ success: true });
     } catch (error: any) {
       console.error('Delete task error:', error);
@@ -79,13 +89,14 @@ export async function registerRoutes(
   });
 
   // Reorder tasks (for skip functionality)
-  app.post("/api/tasks/reorder", async (req, res) => {
+  app.post("/api/tasks/reorder", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const { taskIds } = req.body;
       if (!Array.isArray(taskIds)) {
         return res.status(400).json({ error: 'taskIds must be an array' });
       }
-      await storage.reorderTasks(taskIds);
+      await storage.reorderTasks(taskIds, userId);
       res.json({ success: true });
     } catch (error: any) {
       console.error('Reorder tasks error:', error);
@@ -94,10 +105,11 @@ export async function registerRoutes(
   });
 
   // Clear completed tasks
-  app.delete("/api/tasks/completed", async (req, res) => {
+  app.delete("/api/tasks/completed", isAuthenticated, async (req: any, res) => {
     try {
-      await storage.clearCompletedTasks();
-      res.json({ success: true, cleared: true, timestamp: new Date().toISOString() });
+      const userId = req.user.claims.sub;
+      await storage.clearCompletedTasks(userId);
+      res.json({ success: true });
     } catch (error: any) {
       console.error('Clear completed tasks error:', error);
       res.status(500).json({ error: 'Failed to clear completed tasks' });

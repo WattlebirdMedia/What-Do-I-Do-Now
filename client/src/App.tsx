@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import TaskInput from "@/components/TaskInput";
 import TaskDisplay from "@/components/TaskDisplay";
 import CompletedTasks from "@/components/CompletedTasks";
+import { Button } from "@/components/ui/button";
 import type { Task } from "@shared/schema";
 
 type View = "input" | "focus" | "completed";
@@ -12,7 +14,34 @@ function getTodayDateString(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-function App() {
+function LandingPage() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-6">
+      <div className="w-full max-w-md text-center space-y-8">
+        <h1 className="text-3xl md:text-4xl font-normal text-foreground">
+          What Do I Do Now?
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          A calm task manager that shows you one thing at a time.
+        </p>
+        <p className="text-muted-foreground">
+          Sign in to save your tasks and access them from any device.
+        </p>
+        <Button
+          size="lg"
+          className="w-full min-h-12 text-base"
+          onClick={() => window.location.href = '/api/login'}
+          data-testid="button-login"
+        >
+          Sign In to Get Started
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function TaskApp() {
+  const { user, logout } = useAuth();
   const [view, setView] = useState<View>("input");
 
   const { data: tasks = [], isLoading: tasksLoading } = useQuery<Task[]>({
@@ -133,6 +162,8 @@ function App() {
         }))}
         onBack={handleBackFromCompleted}
         onClear={handleClearCompleted}
+        onLogout={logout}
+        userName={user?.firstName || user?.email || undefined}
       />
     );
   }
@@ -145,6 +176,8 @@ function App() {
         onStartTasks={handleStartTasks}
         completedCount={todayCompleted.length}
         onViewCompleted={handleViewCompleted}
+        onLogout={logout}
+        userName={user?.firstName || user?.email || undefined}
       />
     );
   }
@@ -159,8 +192,28 @@ function App() {
       onAddMore={handleAddMore}
       completedCount={todayCompleted.length}
       onViewCompleted={handleViewCompleted}
+      onLogout={logout}
+      userName={user?.firstName || user?.email || undefined}
     />
   );
+}
+
+function App() {
+  const { user, isLoading, isAuthenticated } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LandingPage />;
+  }
+
+  return <TaskApp />;
 }
 
 export default App;

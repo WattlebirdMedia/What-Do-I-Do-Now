@@ -11,6 +11,8 @@ interface TaskDisplayProps {
   onAddMore?: () => void;
   completedCount?: number;
   onViewCompleted?: () => void;
+  onLogout?: () => void;
+  userName?: string;
 }
 
 function formatTime(seconds: number): string {
@@ -27,7 +29,9 @@ export default function TaskDisplay({
   totalTasks = 1,
   onAddMore,
   completedCount = 0,
-  onViewCompleted
+  onViewCompleted,
+  onLogout,
+  userName
 }: TaskDisplayProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [timerPaused, setTimerPaused] = useState(false);

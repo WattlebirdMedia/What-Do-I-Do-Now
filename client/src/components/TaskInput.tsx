@@ -9,6 +9,8 @@ interface TaskInputProps {
   onStartTasks?: () => void;
   completedCount?: number;
   onViewCompleted?: () => void;
+  onLogout?: () => void;
+  userName?: string;
 }
 
 function playDingSound() {
@@ -29,7 +31,7 @@ function playDingSound() {
   oscillator.stop(audioContext.currentTime + 0.3);
 }
 
-export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks, completedCount = 0, onViewCompleted }: TaskInputProps) {
+export default function TaskInput({ onAddTask, taskCount = 0, onStartTasks, completedCount = 0, onViewCompleted, onLogout, userName }: TaskInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);

@@ -10,6 +10,8 @@ interface CompletedTasksProps {
   tasks: CompletedTask[];
   onBack: () => void;
   onClear: () => void;
+  onLogout?: () => void;
+  userName?: string;
 }
 
 function formatTime(isoString: string): string {
@@ -29,7 +31,7 @@ function getRandomPhrase(): string {
   return encouragingPhrases[index];
 }
 
-export default function CompletedTasks({ tasks, onBack, onClear }: CompletedTasksProps) {
+export default function CompletedTasks({ tasks, onBack, onClear, onLogout, userName }: CompletedTasksProps) {
   const phrase = getRandomPhrase();
   
   return (
