@@ -97,7 +97,7 @@ export async function registerRoutes(
   app.delete("/api/tasks/completed", async (req, res) => {
     try {
       await storage.clearCompletedTasks();
-      res.json({ success: true });
+      res.json({ success: true, cleared: true, timestamp: new Date().toISOString() });
     } catch (error: any) {
       console.error('Clear completed tasks error:', error);
       res.status(500).json({ error: 'Failed to clear completed tasks' });

@@ -1,5 +1,5 @@
 import { users, tasks, type User, type InsertUser, type Task, type InsertTask } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, asc, isNull } from "drizzle-orm";
 
 export interface IStorage {
@@ -77,8 +77,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async clearCompletedTasks(): Promise<void> {
-    const result = await db.delete(tasks).where(eq(tasks.completed, true)).returning();
-    console.log('Cleared completed tasks:', result.length);
+    const result = await pool.query('DELETE FROM tasks WHERE completed = true RETURNING *');
+    console.log('Cleared completed tasks:', result.rowCount);
   }
 }
 
