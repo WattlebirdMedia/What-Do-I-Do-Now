@@ -83,13 +83,49 @@ function TaskApp() {
     }
   });
 
-  const clearCompletedMutation = useMutation({
+  const { data: binTasks = [] } = useQuery<Task[]>({
+    queryKey: ['/api/tasks/bin'],
+  });
+
+  const archiveCompletedMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('DELETE', '/api/tasks/completed', {});
+      const response = await apiRequest('POST', '/api/tasks/archive', {});
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/completed'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/bin'] });
+    }
+  });
+
+  const restoreTaskMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest('PATCH', `/api/tasks/${id}/restore`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/bin'] });
+    }
+  });
+
+  const permanentDeleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest('DELETE', `/api/tasks/${id}/permanent`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/bin'] });
+    }
+  });
+
+  const emptyBinMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('DELETE', '/api/tasks/bin', {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/bin'] });
     }
   });
 
@@ -135,8 +171,20 @@ function TaskApp() {
     setView(tasks.length > 0 ? "focus" : "input");
   };
 
-  const handleClearCompleted = () => {
-    clearCompletedMutation.mutate();
+  const handleMoveTobin = () => {
+    archiveCompletedMutation.mutate();
+  };
+
+  const handleRestoreTask = (id: string) => {
+    restoreTaskMutation.mutate(id);
+  };
+
+  const handlePermanentDelete = (id: string) => {
+    permanentDeleteMutation.mutate(id);
+  };
+
+  const handleEmptyBin = () => {
+    emptyBinMutation.mutate();
   };
 
   const todayCompleted = completedTasks.filter(
@@ -157,11 +205,20 @@ function TaskApp() {
     return (
       <CompletedTasks
         tasks={todayCompleted.map(t => ({
+          id: t.id,
           text: t.text,
           completedAt: t.completedAt?.toString() || new Date().toISOString()
         }))}
+        binTasks={binTasks.map(t => ({
+          id: t.id,
+          text: t.text,
+          archivedAt: t.archivedAt?.toString() || new Date().toISOString()
+        }))}
         onBack={handleBackFromCompleted}
-        onClear={handleClearCompleted}
+        onMoveToBin={handleMoveTobin}
+        onRestoreTask={handleRestoreTask}
+        onPermanentDelete={handlePermanentDelete}
+        onEmptyBin={handleEmptyBin}
         onLogout={logout}
         userName={user?.firstName || user?.email || undefined}
       />
