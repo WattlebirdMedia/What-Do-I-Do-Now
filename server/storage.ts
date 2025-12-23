@@ -5,11 +5,15 @@ import { eq, asc, and } from "drizzle-orm";
 export interface IStorage {
   getTasks(userId: string): Promise<Task[]>;
   getCompletedTasks(userId: string): Promise<Task[]>;
+  getArchivedTasks(userId: string): Promise<Task[]>;
   createTask(task: InsertTask, userId: string): Promise<Task>;
   completeTask(id: string, userId: string): Promise<Task | undefined>;
   deleteTask(id: string, userId: string): Promise<void>;
   reorderTasks(taskIds: string[], userId: string): Promise<void>;
-  clearCompletedTasks(userId: string): Promise<void>;
+  archiveCompletedTasks(userId: string): Promise<void>;
+  restoreTask(id: string, userId: string): Promise<Task | undefined>;
+  permanentlyDeleteTask(id: string, userId: string): Promise<void>;
+  emptyBin(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -21,8 +25,14 @@ export class DatabaseStorage implements IStorage {
 
   async getCompletedTasks(userId: string): Promise<Task[]> {
     return db.select().from(tasks)
-      .where(and(eq(tasks.userId, userId), eq(tasks.completed, true)))
+      .where(and(eq(tasks.userId, userId), eq(tasks.completed, true), eq(tasks.archived, false)))
       .orderBy(asc(tasks.completedAt));
+  }
+
+  async getArchivedTasks(userId: string): Promise<Task[]> {
+    return db.select().from(tasks)
+      .where(and(eq(tasks.userId, userId), eq(tasks.archived, true)))
+      .orderBy(asc(tasks.archivedAt));
   }
 
   async createTask(insertTask: InsertTask, userId: string): Promise<Task> {
@@ -54,8 +64,26 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async clearCompletedTasks(userId: string): Promise<void> {
-    await db.delete(tasks).where(and(eq(tasks.userId, userId), eq(tasks.completed, true)));
+  async archiveCompletedTasks(userId: string): Promise<void> {
+    await db.update(tasks)
+      .set({ archived: true, archivedAt: new Date() })
+      .where(and(eq(tasks.userId, userId), eq(tasks.completed, true), eq(tasks.archived, false)));
+  }
+
+  async restoreTask(id: string, userId: string): Promise<Task | undefined> {
+    const [task] = await db.update(tasks)
+      .set({ archived: false, archivedAt: null, completed: false, completedAt: null })
+      .where(and(eq(tasks.id, id), eq(tasks.userId, userId), eq(tasks.archived, true)))
+      .returning();
+    return task || undefined;
+  }
+
+  async permanentlyDeleteTask(id: string, userId: string): Promise<void> {
+    await db.delete(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId), eq(tasks.archived, true)));
+  }
+
+  async emptyBin(userId: string): Promise<void> {
+    await db.delete(tasks).where(and(eq(tasks.userId, userId), eq(tasks.archived, true)));
   }
 }
 

@@ -104,15 +104,66 @@ export async function registerRoutes(
     }
   });
 
-  // Clear completed tasks
-  app.delete("/api/tasks/completed", isAuthenticated, async (req: any, res) => {
+  // Archive completed tasks (move to bin)
+  app.post("/api/tasks/archive", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      await storage.clearCompletedTasks(userId);
+      await storage.archiveCompletedTasks(userId);
       res.json({ success: true });
     } catch (error: any) {
-      console.error('Clear completed tasks error:', error);
-      res.status(500).json({ error: 'Failed to clear completed tasks' });
+      console.error('Archive completed tasks error:', error);
+      res.status(500).json({ error: 'Failed to archive completed tasks' });
+    }
+  });
+
+  // Get archived tasks (bin)
+  app.get("/api/tasks/bin", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const archivedTasks = await storage.getArchivedTasks(userId);
+      res.json(archivedTasks);
+    } catch (error: any) {
+      console.error('Get archived tasks error:', error);
+      res.status(500).json({ error: 'Failed to get archived tasks' });
+    }
+  });
+
+  // Restore task from bin
+  app.patch("/api/tasks/:id/restore", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.restoreTask(req.params.id, userId);
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      res.json(task);
+    } catch (error: any) {
+      console.error('Restore task error:', error);
+      res.status(500).json({ error: 'Failed to restore task' });
+    }
+  });
+
+  // Permanently delete task from bin
+  app.delete("/api/tasks/:id/permanent", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.permanentlyDeleteTask(req.params.id, userId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Permanent delete task error:', error);
+      res.status(500).json({ error: 'Failed to permanently delete task' });
+    }
+  });
+
+  // Empty bin (permanently delete all archived tasks)
+  app.delete("/api/tasks/bin", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.emptyBin(userId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Empty bin error:', error);
+      res.status(500).json({ error: 'Failed to empty bin' });
     }
   });
 

@@ -12,6 +12,8 @@ export const tasks = pgTable("tasks", {
   position: integer("position").notNull(),
   completed: boolean("completed").notNull().default(false),
   completedAt: timestamp("completed_at"),
+  archived: boolean("archived").notNull().default(false),
+  archivedAt: timestamp("archived_at"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
