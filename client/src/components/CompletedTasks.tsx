@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trash2, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Trash2, Star, Zap, Flame, Trophy, Crown } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface CompletedTask {
@@ -15,9 +16,25 @@ interface CompletedTasksProps {
   userName?: string;
 }
 
+interface AchievementBadge {
+  threshold: number;
+  label: string;
+  icon: typeof Zap;
+  unlocked: boolean;
+}
+
 function formatTime(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function getAchievements(taskCount: number): AchievementBadge[] {
+  return [
+    { threshold: 3, label: "Starter", icon: Zap, unlocked: taskCount >= 3 },
+    { threshold: 6, label: "Focused", icon: Flame, unlocked: taskCount >= 6 },
+    { threshold: 9, label: "Achiever", icon: Trophy, unlocked: taskCount >= 9 },
+    { threshold: 12, label: "Champion", icon: Crown, unlocked: taskCount >= 12 },
+  ];
 }
 
 const encouragingPhrases = [
@@ -34,6 +51,8 @@ function getRandomPhrase(): string {
 
 export default function CompletedTasks({ tasks, onBack, onClear, onLogout, userName }: CompletedTasksProps) {
   const phrase = getRandomPhrase();
+  const achievements = getAchievements(tasks.length);
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
   
   return (
     <div className="flex flex-col min-h-screen bg-background" role="main" aria-label="Completed tasks">
@@ -74,6 +93,29 @@ export default function CompletedTasks({ tasks, onBack, onClear, onLogout, userN
                 <p className="text-muted-foreground text-lg">
                   You completed {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} today.
                 </p>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground text-center">
+                  Achievements {unlockedCount > 0 && `(${unlockedCount}/${achievements.length})`}
+                </h3>
+                <div className="flex justify-center flex-wrap gap-2">
+                  {achievements.map((achievement) => {
+                    const Icon = achievement.icon;
+                    return (
+                      <Badge
+                        key={achievement.threshold}
+                        variant={achievement.unlocked ? "default" : "secondary"}
+                        className={`gap-1.5 px-3 py-1.5 ${!achievement.unlocked ? 'opacity-40' : ''}`}
+                        data-testid={`badge-achievement-${achievement.threshold}`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        <span>{achievement.label}</span>
+                        <span className="text-xs opacity-70">({achievement.threshold})</span>
+                      </Badge>
+                    );
+                  })}
+                </div>
               </div>
 
               <ul className="space-y-3" aria-label="List of completed tasks">
