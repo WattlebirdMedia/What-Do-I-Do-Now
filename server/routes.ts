@@ -10,6 +10,23 @@ const MONTHLY_PRICE = "$6.69 USD";
 const YEARLY_PRICE = "$53.53 USD";
 const ADMIN_EMAIL = "wattlebirdmedia@gmail.com";
 
+const requirePaid = async (req: any, res: any, next: any) => {
+  try {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await storage.getUser(userId);
+    if (!user?.hasPaid) {
+      return res.status(403).json({ error: 'Payment required to access this feature' });
+    }
+    next();
+  } catch (error) {
+    console.error('Payment check error:', error);
+    res.status(500).json({ error: 'Failed to verify payment status' });
+  }
+};
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -115,7 +132,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/tasks", isAuthenticated, async (req: any, res) => {
+  app.get("/api/tasks", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const tasks = await storage.getTasks(userId);
@@ -126,7 +143,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/tasks/completed", isAuthenticated, async (req: any, res) => {
+  app.get("/api/tasks/completed", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const tasks = await storage.getCompletedTasks(userId);
@@ -137,7 +154,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/tasks", isAuthenticated, async (req: any, res) => {
+  app.post("/api/tasks", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const existingTasks = await storage.getTasks(userId);
@@ -159,7 +176,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/tasks/:id/complete", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/tasks/:id/complete", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const task = await storage.completeTask(req.params.id, userId);
@@ -173,7 +190,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/tasks/reorder", isAuthenticated, async (req: any, res) => {
+  app.post("/api/tasks/reorder", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { taskIds } = req.body;
@@ -190,7 +207,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/tasks/bin", isAuthenticated, async (req: any, res) => {
+  app.get("/api/tasks/bin", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const tasks = await storage.getArchivedTasks(userId);
@@ -201,7 +218,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/tasks/archive", isAuthenticated, async (req: any, res) => {
+  app.post("/api/tasks/archive", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       await storage.archiveCompletedTasks(userId);
@@ -212,7 +229,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/tasks/:id/restore", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/tasks/:id/restore", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const task = await storage.restoreTask(req.params.id, userId);
@@ -226,7 +243,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/tasks/:id/permanent", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/tasks/:id/permanent", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       await storage.permanentlyDeleteTask(req.params.id, userId);
@@ -237,7 +254,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/tasks/bin", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/tasks/bin", isAuthenticated, requirePaid, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       await storage.emptyBin(userId);
