@@ -9,7 +9,8 @@ import CompletedTasks from "@/components/CompletedTasks";
 import Paywall from "@/components/Paywall";
 import AdminPage from "@/pages/admin";
 import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, Check, Brain, Focus, Sparkles } from "lucide-react";
 import type { Task } from "@shared/schema";
 
 type View = "input" | "focus" | "completed";
@@ -38,30 +39,96 @@ function getTodayDateString(): string {
 }
 
 function LandingPage() {
+  const benefits = [
+    {
+      icon: Focus,
+      title: "One Task at a Time",
+      description: "No overwhelming lists. Just your next action, front and center."
+    },
+    {
+      icon: Brain,
+      title: "Built for ADHD Minds",
+      description: "Designed to reduce decision fatigue and analysis paralysis."
+    },
+    {
+      icon: Sparkles,
+      title: "Calm, Not Chaotic",
+      description: "A peaceful interface that won't add to your mental load."
+    }
+  ];
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-6">
-      <div className="w-full max-w-md text-center space-y-8">
-        <h1 className="text-3xl md:text-4xl font-normal text-foreground">
-          What Do I Do Now?
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          A calm task manager that shows you one thing at a time.
-        </p>
-        <p className="text-muted-foreground">
-          Sign in to save your tasks and access them from any device.
-        </p>
-        <Button
-          size="lg"
-          className="w-full min-h-12 text-base"
-          onClick={() => window.location.href = '/api/login'}
-          data-testid="button-login"
-        >
-          Sign In to Get Started
-        </Button>
-        <div className="pt-8">
-          <p className="text-xs text-muted-foreground" data-testid="text-copyright">
-            © {new Date().getFullYear()} Made by Wattlebird Media
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="flex flex-col items-center justify-center min-h-screen p-6">
+        <div className="w-full max-w-lg space-y-12">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl md:text-4xl font-medium text-foreground" data-testid="text-title">
+              What Do I Do Now?
+            </h1>
+            <p className="text-xl text-muted-foreground" data-testid="text-tagline">
+              The task manager that actually helps you focus.
+            </p>
+          </div>
+
+          <div className="bg-accent/30 rounded-md p-6 text-center space-y-2">
+            <p className="text-lg text-foreground">
+              Stop staring at your to-do list wondering where to start.
+            </p>
+            <p className="text-muted-foreground">
+              This app shows you just one task at a time, so you always know exactly what to do next.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {benefits.map((benefit, index) => (
+              <div 
+                key={index} 
+                className="flex items-start gap-4 p-4"
+                data-testid={`benefit-${index}`}
+              >
+                <div className="flex-shrink-0 w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
+                  <benefit.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-medium text-foreground">{benefit.title}</h3>
+                  <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <Button
+              size="lg"
+              className="w-full min-h-14 text-lg"
+              onClick={() => window.location.href = '/api/login'}
+              data-testid="button-login"
+            >
+              Start Your Free 7-Day Trial
+            </Button>
+            <p className="text-center text-sm text-muted-foreground" data-testid="text-pricing">
+              Then just $6.69/month or $53.53/year
+            </p>
+          </div>
+
+          <div className="pt-4 space-y-4">
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Check className="w-4 h-4" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Check className="w-4 h-4" />
+                <span>Cancel anytime</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-border">
+            <p className="text-center text-xs text-muted-foreground" data-testid="text-copyright">
+              © {new Date().getFullYear()} Made by Wattlebird Media
+            </p>
+          </div>
         </div>
       </div>
     </div>
